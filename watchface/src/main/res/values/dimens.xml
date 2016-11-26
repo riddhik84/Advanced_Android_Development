@@ -5,4 +5,11 @@
     <dimen name="digital_x_offset">15dp</dimen>
     <dimen name="digital_x_offset_round">25dp</dimen>
     <dimen name="digital_y_offset">90dp</dimen>
+
+    <dimen name="date_font_size">20dp</dimen>
+
+    <dimen name="time_size">25dp</dimen>
+    <dimen name="date_size">18dp</dimen>
+    <dimen name="temp_size">22dp</dimen>
+
 </resources>
