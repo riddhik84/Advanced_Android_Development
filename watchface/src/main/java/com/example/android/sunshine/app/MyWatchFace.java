@@ -124,13 +124,20 @@ public class MyWatchFace extends CanvasWatchFaceService {
         private Double mLow;
         private Bitmap weatherId;
 
-        GoogleApiClient mGoogleApiClient;
+        //GoogleApiClient mGoogleApiClient;
 
         final Handler mUpdateTimeHandler = new EngineHandler(this);
         boolean mRegisteredTimeZoneReceiver = false;
         Paint mBackgroundPaint;
         boolean mAmbient;
         Calendar mCalendar;
+
+        GoogleApiClient mGoogleApiClient = new GoogleApiClient.Builder(MyWatchFace.this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(Wearable.API)
+                .build();
+
         final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -152,17 +159,18 @@ public class MyWatchFace extends CanvasWatchFaceService {
             super.onCreate(holder);
 
             setWatchFaceStyle(new WatchFaceStyle.Builder(MyWatchFace.this)
-                    .setCardPeekMode(WatchFaceStyle.PEEK_MODE_VARIABLE)
+                    .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
                     .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
+                    .setShowUnreadCountIndicator(true)
                     .setShowSystemUiTime(false)
                     .setAcceptsTapEvents(true)
                     .build());
 
-            mGoogleApiClient = new GoogleApiClient.Builder(MyWatchFace.this)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .addApi(Wearable.API)
-                    .build();
+//            mGoogleApiClient = new GoogleApiClient.Builder(MyWatchFace.this)
+//                    .addConnectionCallbacks(this)
+//                    .addOnConnectionFailedListener(this)
+//                    .addApi(Wearable.API)
+//                    .build();
             mGoogleApiClient.connect();
 
             Resources resources = MyWatchFace.this.getResources();
@@ -185,24 +193,18 @@ public class MyWatchFace extends CanvasWatchFaceService {
             super.onVisibilityChanged(visible);
 
             if (visible) {
-                registerReceiver();
-                Log.d(LOG_TAG, "rkakadia onVisibilityChanged visible");
-                //rkakadia: watchface sync support
-                mGoogleApiClient.connect();
-                // Update time zone in case it changed while we weren't visible.
-//                mCalendar.setTimeZone(TimeZone.getDefault());
 
-                requestWeatherInfo();
-                invalidate();
+                mGoogleApiClient.connect();
+                //wake up device register broadcast receiver
+                registerReceiver();
+
             } else {
+                //invisible device, unregister broadcast receiver
                 unregisterReceiver();
-                Log.d(LOG_TAG, "rkakadia onVisibilityChanged in-visible");
-                //rkakadia: watchface sync support
                 if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
                     Wearable.DataApi.removeListener(mGoogleApiClient, this);
                     mGoogleApiClient.disconnect();
                 }
-
             }
 
             // Whether the timer should be running depends on whether we're visible (as well as
@@ -258,7 +260,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             if (mAmbient != inAmbientMode) {
                 mAmbient = inAmbientMode;
                 if (mLowBitAmbient) {
-                    Log.d(LOG_TAG, "In mLowBitAmbient mode");
+                    Log.d(LOG_TAG, "rkakadia In mLowBitAmbient mode");
                 }
 
                 sunshineWatchFace.setAntiAlias(!inAmbientMode);
@@ -287,7 +289,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
                     break;
                 case TAP_TYPE_TAP:
                     // The user has completed the tap gesture.
-                    // TODO: Add code to handle the tap gesture.
+                    // Add code to handle the tap gesture.
                     Toast.makeText(getApplicationContext(), R.string.message, Toast.LENGTH_SHORT)
                             .show();
                     break;
@@ -365,12 +367,14 @@ public class MyWatchFace extends CanvasWatchFaceService {
             Log.d(LOG_TAG, "rkakadia onConnected watchface");
 
             Wearable.DataApi.addListener(mGoogleApiClient, Engine.this);
-            //rkakadia: watchface sync support
+
             requestWeatherInfo();
         }
 
         //rkakadia: watchface sync support
         public void requestWeatherInfo() {
+            Log.d(LOG_TAG, "rkakadia requestWeatherInfo() watchface start");
+
             PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(PATH);
             PutDataRequest request = putDataMapRequest.asPutDataRequest();
             //Flags this DataItem for urgent transport
@@ -386,6 +390,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
                     }
                 }
             });
+            Log.d(LOG_TAG, "rkakadia requestWeatherInfo() watchface end");
         }
 
         @Override
@@ -400,7 +405,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
         @Override
         public void onDataChanged(DataEventBuffer dataEventBuffer) {
-            Log.d(LOG_TAG, "rkakadia onDataChanged watchface");
+            Log.d(LOG_TAG, "rkakadia onDataChanged() watchface start");
 
             for (DataEvent dataEvent : dataEventBuffer) {
                 if (dataEvent.getType() != DataEvent.TYPE_CHANGED) {
@@ -418,27 +423,26 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
                 mHigh = config.getDouble(KEY_HIGH);
                 mLow = config.getDouble(KEY_LOW);
+                Log.d(LOG_TAG, "rkakadia onDataChanged() watchface high: " + mHigh + " low: " + mLow);
 
                 Asset asset = config.getAsset(KEY_ASSET);
                 loadBitmapFromAsset(asset);
             }
-            invalidate();
+            Log.d(LOG_TAG, "rkakadia onDataChanged() watchface end");
+
         }
 
         public void loadBitmapFromAsset(Asset asset) {
-            Log.d(LOG_TAG, "rkakadia loadBitmapFromAsset");
-
             if (asset == null) {
                 throw new IllegalArgumentException("Asset must be non-null");
             }
-
             Wearable.DataApi.
                     getFdForAsset(mGoogleApiClient, asset).setResultCallback(new ResultCallback<DataApi.GetFdForAssetResult>() {
                 @Override
                 public void onResult(DataApi.GetFdForAssetResult getFdForAssetResult) {
                     InputStream assetInputStream = getFdForAssetResult.getInputStream();
                     if (assetInputStream == null) {
-                        Log.d(LOG_TAG, "rkakadia Requested an unknown Asset.");
+                        Log.w(LOG_TAG, "rkakadia Requested an unknown Asset.");
                         weatherId = null;
                     }
                     // decode the stream into a bitmap
@@ -446,6 +450,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
                     weatherId = Bitmap.createScaledBitmap(bitmap, 50, 50, false);
                 }
             });
+            Log.d(LOG_TAG, "rkakadia loadBitmapFromAsset() watchface end");
         }
     }
 }

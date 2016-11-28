@@ -128,7 +128,10 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
-
+        if(id==R.id.action_sync) {
+            SunshineSyncAdapter.syncImmediately(this);
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 
