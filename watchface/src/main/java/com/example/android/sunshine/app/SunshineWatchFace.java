@@ -79,7 +79,7 @@ public class SunshineWatchFace {
         this.time = time;
     }
 
-    public void draw(Canvas canvas, Rect bounds, boolean isInAmbiantMode, double tempHigh, double tempLow, Bitmap weatherId) {
+    public void draw(Canvas canvas, Rect bounds, boolean isInAmbiantMode, double tempHigh, double tempLow, int weatherId) {
         time.setToNow();
 
         //Time -- 15:50
@@ -104,16 +104,23 @@ public class SunshineWatchFace {
             float tempYOffset = bounds.height() - (bounds.height() / 3);
 
             //Center: Temp Image "IMG"
-            Drawable weatherImage = context.getResources().getDrawable(R.drawable.art_clear);
+            Drawable weatherImage = null;
+            Log.d(LOG_TAG, "rkakadia weatherId " + weatherId);
+            if (weatherId != 0) {
+                weatherImage = context.getResources().getDrawable(Utility.getArtResourceForWeatherCondition(weatherId));
+            } else {
+                weatherImage = context.getResources().getDrawable(R.drawable.art_clear);
+            }
             Bitmap weatherImgBitmap = ((BitmapDrawable) weatherImage).getBitmap();
             float imgTempXOffset = computeImgXOffset(weatherImgBitmap, bounds);
             //float imgTempYOffset = computeImgYOffset(weatherImage, tempImagePaint);
 //            Log.d(LOG_TAG, "RK imgTempXOffset " + imgTempXOffset + " tempYOffset " + tempYOffset);
             canvas.drawBitmap(weatherImgBitmap, imgTempXOffset, tempYOffset - (tempYOffset / 4) + 10.0f, tempImagePaint);
 
+
             //Left: Max Temp: 25
             //String maxTemp = "25" + "\u00B0";
-            String maxTemp = tempHigh + "\u00B0";
+            String maxTemp = (int) tempHigh + "\u00B0";
 //            Log.d(LOG_TAG, "RK maxTemp " + maxTemp);
             //float maxTempXOffset = computeXOffset(maxTemp, maxTempPaint, bounds);
             float maxTempXOffset = imgTempXOffset - (imgTempXOffset / 2);
@@ -122,7 +129,7 @@ public class SunshineWatchFace {
 
             //Right: Min Temp: 16
             //String minTemp = "16" + "\u00B0";
-            String minTemp = tempLow + "\u00B0";
+            String minTemp = (int) tempLow + "\u00B0";
 //            Log.d(LOG_TAG, "RK minTemp " + minTemp);
             float minTempXOffset = computeXOffset(minTemp, minTempPaint, bounds);
 //            Log.d(LOG_TAG, "RK minTempXOffset " + minTempXOffset + " tempYOffset " + tempYOffset);

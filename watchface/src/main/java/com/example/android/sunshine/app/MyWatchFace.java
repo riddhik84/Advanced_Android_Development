@@ -119,10 +119,12 @@ public class MyWatchFace extends CanvasWatchFaceService {
         private static final String KEY_HIGH = "key_high";
         private static final String KEY_LOW = "key_low";
         private static final String KEY_ASSET = "key_asset";
+        private static final String KEY_WEATHER_ID = "key_weather_id";
 
         private Double mHigh;
         private Double mLow;
-        private Bitmap weatherId;
+        private Bitmap weatherImg;
+        private Integer weatherId;
 
         //GoogleApiClient mGoogleApiClient;
 
@@ -320,14 +322,18 @@ public class MyWatchFace extends CanvasWatchFaceService {
 //                canvas.drawBitmap(mBackgroundBitmap, 0, bounds.height() / 2, background_image);
 
             }
-            Log.d(LOG_TAG, "rkakadia draw watchface " + "mLow: " + mLow + " mHigh: " + mHigh);
-            if (mLow == null) {
-                mLow = 0.0d;
-            }
-            if (mHigh == null) {
+            if(mHigh == null){
                 mHigh = 0.0d;
             }
-            sunshineWatchFace.draw(canvas, bounds, isInAmbientMode(), mLow, mHigh, weatherId);
+            if(mLow == null){
+                mLow = 0.0d;
+            }
+
+            if(weatherId == null){
+                weatherId = 0;
+            }
+            Log.d(LOG_TAG, "rkakadia draw watchface " + "mLow: " + mLow + " mHigh: " + mHigh);
+            sunshineWatchFace.draw(canvas, bounds, isInAmbientMode(), mLow,  mHigh, weatherId);
         }
 
         /**
@@ -423,34 +429,35 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
                 mHigh = config.getDouble(KEY_HIGH);
                 mLow = config.getDouble(KEY_LOW);
-                Log.d(LOG_TAG, "rkakadia onDataChanged() watchface high: " + mHigh + " low: " + mLow);
+                weatherId = config.getInt(KEY_WEATHER_ID);
+                Log.d(LOG_TAG, "rkakadia onDataChanged() watchface high: " + mHigh + " low: " + mLow + " weatherId: " + weatherId);
 
-                Asset asset = config.getAsset(KEY_ASSET);
-                loadBitmapFromAsset(asset);
+//                Asset asset = config.getAsset(KEY_ASSET);
+//                loadBitmapFromAsset(asset);
             }
             Log.d(LOG_TAG, "rkakadia onDataChanged() watchface end");
 
         }
 
-        public void loadBitmapFromAsset(Asset asset) {
-            if (asset == null) {
-                throw new IllegalArgumentException("Asset must be non-null");
-            }
-            Wearable.DataApi.
-                    getFdForAsset(mGoogleApiClient, asset).setResultCallback(new ResultCallback<DataApi.GetFdForAssetResult>() {
-                @Override
-                public void onResult(DataApi.GetFdForAssetResult getFdForAssetResult) {
-                    InputStream assetInputStream = getFdForAssetResult.getInputStream();
-                    if (assetInputStream == null) {
-                        Log.w(LOG_TAG, "rkakadia Requested an unknown Asset.");
-                        weatherId = null;
-                    }
-                    // decode the stream into a bitmap
-                    Bitmap bitmap = BitmapFactory.decodeStream(assetInputStream);
-                    weatherId = Bitmap.createScaledBitmap(bitmap, 50, 50, false);
-                }
-            });
-            Log.d(LOG_TAG, "rkakadia loadBitmapFromAsset() watchface end");
-        }
+//        public void loadBitmapFromAsset(Asset asset) {
+//            if (asset == null) {
+//                throw new IllegalArgumentException("Asset must be non-null");
+//            }
+//            Wearable.DataApi.
+//                    getFdForAsset(mGoogleApiClient, asset).setResultCallback(new ResultCallback<DataApi.GetFdForAssetResult>() {
+//                @Override
+//                public void onResult(DataApi.GetFdForAssetResult getFdForAssetResult) {
+//                    InputStream assetInputStream = getFdForAssetResult.getInputStream();
+//                    if (assetInputStream == null) {
+//                        Log.w(LOG_TAG, "rkakadia Requested an unknown Asset.");
+//                        weatherId = null;
+//                    }
+//                    // decode the stream into a bitmap
+//                    Bitmap bitmap = BitmapFactory.decodeStream(assetInputStream);
+//                    weatherId = Bitmap.createScaledBitmap(bitmap, 50, 50, false);
+//                }
+//            });
+//            Log.d(LOG_TAG, "rkakadia loadBitmapFromAsset() watchface end");
+//        }
     }
 }
