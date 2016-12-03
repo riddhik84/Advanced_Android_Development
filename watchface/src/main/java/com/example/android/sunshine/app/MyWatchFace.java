@@ -254,7 +254,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             if (mAmbient != inAmbientMode) {
                 mAmbient = inAmbientMode;
                 if (mLowBitAmbient) {
-                    Log.d(LOG_TAG, "rkakadia In mLowBitAmbient mode");
+                    //Log.d(LOG_TAG, "rkakadia In mLowBitAmbient mode");
                 }
 
                 sunshineWatchFace.setAntiAlias(!inAmbientMode);
@@ -323,7 +323,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             if (weatherId == null) {
                 weatherId = 0;
             }
-            Log.d(LOG_TAG, "rkakadia draw watchface " + "mLow: " + mLow + " mHigh: " + mHigh + " weatherId: " + weatherId);
+            //Log.d(LOG_TAG, "rkakadia draw watchface " + "mLow: " + mLow + " mHigh: " + mHigh + " weatherId: " + weatherId);
             sunshineWatchFace.draw(canvas, bounds, isInAmbientMode(), mLow, mHigh, weatherId);
         }
 
@@ -361,7 +361,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
         @Override
         public void onConnected(@Nullable Bundle bundle) {
-            Log.d(LOG_TAG, "rkakadia onConnected watchface");
+            //Log.d(LOG_TAG, "rkakadia onConnected watchface");
 
             Wearable.DataApi.addListener(mGoogleApiClient, Engine.this);
 
@@ -373,9 +373,9 @@ public class MyWatchFace extends CanvasWatchFaceService {
                 @Override
                 public void onResult(@NonNull DataApi.DataItemResult dataItemResult) {
                     if (!dataItemResult.getStatus().isSuccess()) {
-                        Log.d(LOG_TAG, "rkakadia Failed weather data sync from phone");
+                        //Log.d(LOG_TAG, "rkakadia Failed weather data sync from phone");
                     } else {
-                        Log.d(LOG_TAG, "rkakadia Successful weather data sync from phone " + dataItemResult.getDataItem().getUri());
+                        //Log.d(LOG_TAG, "rkakadia Successful weather data sync from phone " + dataItemResult.getDataItem().getUri());
 
                         DataMapItem dataMapItem = DataMapItem.fromDataItem(dataItemResult.getDataItem());
                         DataMap config = dataMapItem.getDataMap();
@@ -383,7 +383,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
                         mHigh = config.getDouble(KEY_HIGH);
                         mLow = config.getDouble(KEY_LOW);
                         weatherId = config.getInt(KEY_WEATHER_ID);
-                        Log.d(LOG_TAG, "rkakadia onConnected() watchface high: " + mHigh + " low: " + mLow + " weatherId: " + weatherId);
+                        //Log.d(LOG_TAG, "rkakadia onConnected() watchface high: " + mHigh + " low: " + mLow + " weatherId: " + weatherId);
                     }
                 }
             });
@@ -391,18 +391,18 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
         @Override
         public void onConnectionSuspended(int i) {
-            Log.d(LOG_TAG, "rkakadia onConnectionSuspended()");
+            //Log.d(LOG_TAG, "rkakadia onConnectionSuspended()");
         }
 
         @Override
         public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-            Log.d(LOG_TAG, "rkakadia onConnectionFailed()");
+            //Log.d(LOG_TAG, "rkakadia onConnectionFailed()");
 
         }
 
         @Override
         public void onDataChanged(DataEventBuffer dataEventBuffer) {
-            Log.d(LOG_TAG, "rkakadia onDataChanged() start....watchface");
+            //Log.d(LOG_TAG, "rkakadia onDataChanged() start....watchface");
 
             for (DataEvent dataEvent : dataEventBuffer) {
                 if (dataEvent.getType() != DataEvent.TYPE_CHANGED) {
@@ -421,9 +421,9 @@ public class MyWatchFace extends CanvasWatchFaceService {
                 mHigh = config.getDouble(KEY_HIGH);
                 mLow = config.getDouble(KEY_LOW);
                 weatherId = config.getInt(KEY_WEATHER_ID);
-                Log.d(LOG_TAG, "rkakadia onDataChanged() watchface high: " + mHigh + " low: " + mLow + " weatherId: " + weatherId);
+                //Log.d(LOG_TAG, "rkakadia onDataChanged() watchface high: " + mHigh + " low: " + mLow + " weatherId: " + weatherId);
             }
-            Log.d(LOG_TAG, "rkakadia onDataChanged() end...watchface");
+            //Log.d(LOG_TAG, "rkakadia onDataChanged() end...watchface");
         }
     }
 }
