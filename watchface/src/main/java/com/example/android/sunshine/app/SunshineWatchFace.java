@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.text.format.Time;
@@ -21,6 +22,13 @@ import java.util.Date;
 public class SunshineWatchFace {
 
     private final String LOG_TAG = SunshineWatchFace.class.getSimpleName();
+
+    private static final Typeface NORMAL_TYPEFACE =
+            Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
+    private static final Typeface BOLD_TYPEFACE =
+            Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
+
+    final String suffix = "\u00B0";
 
     private static final String TIME_FORMAT_WITHOUT_SECONDS = "%02d:%02d";
     private static final String TIME_FORMAT_WITH_SECONDS = TIME_FORMAT_WITHOUT_SECONDS + ":%02d";
@@ -93,7 +101,6 @@ public class SunshineWatchFace {
         //Date -- FRI, JUL 14 2015
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATE_FORMAT);
         String formatedDate = simpleDateFormat.format(new Date()).toUpperCase();
-//        Log.d(LOG_TAG, "RK formatedDate " + formatedDate);
         float dateXOffset = computeXOffset(formatedDate, datePaint, bounds);
         float dateYOffset = computeDateYOffset(formatedDate, datePaint);
 //        Log.d(LOG_TAG, "RK dateXOffset " + dateXOffset + " dateYOffset " + dateYOffset);
@@ -105,7 +112,7 @@ public class SunshineWatchFace {
 
             //Center: Temp Image "IMG"
             Drawable weatherImage = null;
-            Log.d(LOG_TAG, "rkakadia weatherId " + weatherId);
+//            Log.d(LOG_TAG, "rkakadia SunshineWatchFace weatherId " + weatherId);
             if (weatherId != 0) {
                 weatherImage = context.getResources().getDrawable(Utility.getArtResourceForWeatherCondition(weatherId));
             } else {
@@ -113,27 +120,28 @@ public class SunshineWatchFace {
             }
             Bitmap weatherImgBitmap = ((BitmapDrawable) weatherImage).getBitmap();
             float imgTempXOffset = computeImgXOffset(weatherImgBitmap, bounds);
-            //float imgTempYOffset = computeImgYOffset(weatherImage, tempImagePaint);
 //            Log.d(LOG_TAG, "RK imgTempXOffset " + imgTempXOffset + " tempYOffset " + tempYOffset);
             canvas.drawBitmap(weatherImgBitmap, imgTempXOffset, tempYOffset - (tempYOffset / 4) + 10.0f, tempImagePaint);
 
-
-            //Left: Max Temp: 25
-            //String maxTemp = "25" + "\u00B0";
-            String maxTemp = (int) tempHigh + "\u00B0";
-//            Log.d(LOG_TAG, "RK maxTemp " + maxTemp);
-            //float maxTempXOffset = computeXOffset(maxTemp, maxTempPaint, bounds);
-            float maxTempXOffset = imgTempXOffset - (imgTempXOffset / 2);
-//            Log.d(LOG_TAG, "RK maxTempXOffset " + maxTempXOffset + " tempYOffset " + tempYOffset);
-            canvas.drawText(maxTemp, maxTempXOffset, tempYOffset, maxTempPaint);
-
-            //Right: Min Temp: 16
-            //String minTemp = "16" + "\u00B0";
-            String minTemp = (int) tempLow + "\u00B0";
-//            Log.d(LOG_TAG, "RK minTemp " + minTemp);
-            float minTempXOffset = computeXOffset(minTemp, minTempPaint, bounds);
+            //Left: Min Temp: 16
+            String minTemp = Math.round(tempLow)  + suffix;
+            float minTempXOffset = imgTempXOffset / 2 ;
 //            Log.d(LOG_TAG, "RK minTempXOffset " + minTempXOffset + " tempYOffset " + tempYOffset);
-            canvas.drawText(minTemp, minTempXOffset + minTempXOffset / 2, tempYOffset, minTempPaint);
+            canvas.drawText(minTemp, minTempXOffset, tempYOffset, maxTempPaint);
+
+            //Right: Max Temp: 25
+            String maxTemp = Math.round(tempHigh) + suffix;
+            float maxTempXOffset = ((imgTempXOffset + weatherImgBitmap.getWidth()) / 2) + imgTempXOffset;
+//           Log.d(LOG_TAG, "RK maxTempXOffset " + maxTempXOffset + " tempYOffset " + tempYOffset);
+            canvas.drawText(maxTemp, maxTempXOffset, tempYOffset, minTempPaint);
+
+//            //Right: Min Temp: 16
+//            String minTemp = Math.round(tempLow) + suffix;
+//            //float minTempXOffset = computeXOffset(minTemp, minTempPaint, bounds);
+//            float minTempXOffset = imgTempXOffset + (imgTempXOffset / 2);
+////            Log.d(LOG_TAG, "RK minTempXOffset " + minTempXOffset + " tempYOffset " + tempYOffset);
+////            canvas.drawText(minTemp, minTempXOffset + minTempXOffset / 2, tempYOffset, minTempPaint);
+//            canvas.drawText(minTemp, minTempXOffset, tempYOffset, minTempPaint);
         }
 
     }

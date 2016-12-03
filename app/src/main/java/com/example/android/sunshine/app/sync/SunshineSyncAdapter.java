@@ -102,13 +102,16 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
     public static final int LOCATION_STATUS_UNKNOWN = 3;
     public static final int LOCATION_STATUS_INVALID = 4;
 
-    //rkakadia
+    //rkakadia wearable sync
     private GoogleApiClient mGoogleApiClient;
     private static final String PATH = "/wearable";
     private static final String KEY_HIGH = "key_high";
     private static final String KEY_LOW = "key_low";
-    private static final String KEY_ASSET = "key_asset";
     private static final String KEY_WEATHER_ID = "key_weather_id";
+
+    Double high;
+    Double low;
+    Integer weatherId;
 
     private Context context;
 
@@ -339,11 +342,11 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
                 double windSpeed;
                 double windDirection;
 
-                double high;
-                double low;
+//                double high;
+//                double low;
 
                 String description;
-                int weatherId;
+//                int weatherId;
 
                 // Get the JSON object representing the day
                 JSONObject dayForecast = weatherArray.getJSONObject(i);
@@ -369,6 +372,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
                 high = temperatureObject.getDouble(OWM_MAX);
                 low = temperatureObject.getDouble(OWM_MIN);
 
+                //rkakadia wearable sync
                 if (i == 0) {
                     Log.d(LOG_TAG, "rkakadia send data to wearable..." + " high: " + high + " low " + low + " weatherId " + weatherId);
                     sendDataToWearable(high, low, weatherId);
@@ -542,12 +546,16 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
+        Log.d(LOG_TAG, "rkakadia application onConnected() send data to watch");
+        if (high != null && low != null && weatherId != null) {
+            sendDataToWearable(high, low, weatherId);
+        }
 
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-
+        Log.d(LOG_TAG, "rkakadia application onConnectionSuspended()");
     }
 
     private Asset createAssetFromBitmap(Bitmap bitmap) {
@@ -558,6 +566,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
 
     }
 
+    //rkakadia wearable sync
     private void sendDataToWearable(final double high, final double low, final int weatherId) {
         Handler handler = new Handler(Looper.getMainLooper());
 
@@ -565,27 +574,22 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
         updateCounterDataMapRequest.getDataMap().putDouble(KEY_HIGH, high);
         updateCounterDataMapRequest.getDataMap().putDouble(KEY_LOW, low);
         updateCounterDataMapRequest.getDataMap().putInt(KEY_WEATHER_ID, weatherId);
-
-//        int id = Utility.getArtResourceForWeatherCondition(weatherId);
-//        Bitmap bitmap = BitmapFactory.decodeResource(getContext().getResources(), id);
-//
-//        Asset asset = createAssetFromBitmap(bitmap);
-//        updateCounterDataMapRequest.getDataMap().putAsset(KEY_ASSET, asset);
         updateCounterDataMapRequest.getDataMap().putLong("timestamp", System.currentTimeMillis());
 
         Log.d(LOG_TAG, "rkakadia temperature high:" + high);
         Log.d(LOG_TAG, "rkakadia temperature low:" + low);
-        Log.d(LOG_TAG, "rkakadia temperature weatherId:" + weatherId);
+        Log.d(LOG_TAG, "rkakadia weatherId:" + weatherId);
 
         handler.post(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(context, "high:" + high + ", low" + low + ", weatherId " + weatherId , Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "high:" + high + ", low" + low + ", weatherId " + weatherId, Toast.LENGTH_SHORT).show();
             }
         });
 
         PutDataRequest putDataRequest = updateCounterDataMapRequest.asPutDataRequest();
         putDataRequest.setUrgent();
+
         PendingResult<DataApi.DataItemResult> pendingResult =
                 Wearable.DataApi.putDataItem(mGoogleApiClient, putDataRequest);
         pendingResult.setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
@@ -598,7 +602,6 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
                 }
             }
         });
-
     }
 
     /**

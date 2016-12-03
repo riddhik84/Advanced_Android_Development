@@ -42,6 +42,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.Asset;
 import com.google.android.gms.wearable.DataApi;
@@ -67,11 +68,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class MyWatchFace extends CanvasWatchFaceService {
     private final String LOG_TAG = MyWatchFace.class.getSimpleName();
-
-    private static final Typeface NORMAL_TYPEFACE =
-            Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
-    private static final Typeface BOLD_TYPEFACE =
-            Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
 
     /**
      * Update rate in milliseconds for interactive mode. We update once a second since seconds are
@@ -114,19 +110,15 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
         private SunshineWatchFace sunshineWatchFace;
 
-        //rkakadia: watchface sync support
+        //rkakadia wearable sync
         private static final String PATH = "/wearable";
         private static final String KEY_HIGH = "key_high";
         private static final String KEY_LOW = "key_low";
-        private static final String KEY_ASSET = "key_asset";
         private static final String KEY_WEATHER_ID = "key_weather_id";
 
         private Double mHigh;
         private Double mLow;
-        private Bitmap weatherImg;
         private Integer weatherId;
-
-        //GoogleApiClient mGoogleApiClient;
 
         final Handler mUpdateTimeHandler = new EngineHandler(this);
         boolean mRegisteredTimeZoneReceiver = false;
@@ -322,18 +314,17 @@ public class MyWatchFace extends CanvasWatchFaceService {
 //                canvas.drawBitmap(mBackgroundBitmap, 0, bounds.height() / 2, background_image);
 
             }
-            if(mHigh == null){
+            if (mHigh == null) {
                 mHigh = 0.0d;
             }
-            if(mLow == null){
+            if (mLow == null) {
                 mLow = 0.0d;
             }
-
-            if(weatherId == null){
+            if (weatherId == null) {
                 weatherId = 0;
             }
-            Log.d(LOG_TAG, "rkakadia draw watchface " + "mLow: " + mLow + " mHigh: " + mHigh);
-            sunshineWatchFace.draw(canvas, bounds, isInAmbientMode(), mLow,  mHigh, weatherId);
+            Log.d(LOG_TAG, "rkakadia draw watchface " + "mLow: " + mLow + " mHigh: " + mHigh + " weatherId: " + weatherId);
+            sunshineWatchFace.draw(canvas, bounds, isInAmbientMode(), mLow, mHigh, weatherId);
         }
 
         /**
@@ -374,44 +365,44 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
             Wearable.DataApi.addListener(mGoogleApiClient, Engine.this);
 
-            requestWeatherInfo();
-        }
-
-        //rkakadia: watchface sync support
-        public void requestWeatherInfo() {
-            Log.d(LOG_TAG, "rkakadia requestWeatherInfo() watchface start");
-
             PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(PATH);
             PutDataRequest request = putDataMapRequest.asPutDataRequest();
-            //Flags this DataItem for urgent transport
             request.setUrgent();
 
             Wearable.DataApi.putDataItem(mGoogleApiClient, request).setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
                 @Override
                 public void onResult(@NonNull DataApi.DataItemResult dataItemResult) {
                     if (!dataItemResult.getStatus().isSuccess()) {
-                        Log.d(LOG_TAG, "rkakadia Failed asking phone for weather data");
+                        Log.d(LOG_TAG, "rkakadia Failed weather data sync from phone");
                     } else {
-                        Log.d(LOG_TAG, "rkakadia Successfully asked for weather data");
+                        Log.d(LOG_TAG, "rkakadia Successful weather data sync from phone " + dataItemResult.getDataItem().getUri());
+
+                        DataMapItem dataMapItem = DataMapItem.fromDataItem(dataItemResult.getDataItem());
+                        DataMap config = dataMapItem.getDataMap();
+
+                        mHigh = config.getDouble(KEY_HIGH);
+                        mLow = config.getDouble(KEY_LOW);
+                        weatherId = config.getInt(KEY_WEATHER_ID);
+                        Log.d(LOG_TAG, "rkakadia onConnected() watchface high: " + mHigh + " low: " + mLow + " weatherId: " + weatherId);
                     }
                 }
             });
-            Log.d(LOG_TAG, "rkakadia requestWeatherInfo() watchface end");
         }
 
         @Override
         public void onConnectionSuspended(int i) {
-
+            Log.d(LOG_TAG, "rkakadia onConnectionSuspended()");
         }
 
         @Override
         public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+            Log.d(LOG_TAG, "rkakadia onConnectionFailed()");
 
         }
 
         @Override
         public void onDataChanged(DataEventBuffer dataEventBuffer) {
-            Log.d(LOG_TAG, "rkakadia onDataChanged() watchface start");
+            Log.d(LOG_TAG, "rkakadia onDataChanged() start....watchface");
 
             for (DataEvent dataEvent : dataEventBuffer) {
                 if (dataEvent.getType() != DataEvent.TYPE_CHANGED) {
@@ -431,33 +422,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
                 mLow = config.getDouble(KEY_LOW);
                 weatherId = config.getInt(KEY_WEATHER_ID);
                 Log.d(LOG_TAG, "rkakadia onDataChanged() watchface high: " + mHigh + " low: " + mLow + " weatherId: " + weatherId);
-
-//                Asset asset = config.getAsset(KEY_ASSET);
-//                loadBitmapFromAsset(asset);
             }
-            Log.d(LOG_TAG, "rkakadia onDataChanged() watchface end");
-
+            Log.d(LOG_TAG, "rkakadia onDataChanged() end...watchface");
         }
-
-//        public void loadBitmapFromAsset(Asset asset) {
-//            if (asset == null) {
-//                throw new IllegalArgumentException("Asset must be non-null");
-//            }
-//            Wearable.DataApi.
-//                    getFdForAsset(mGoogleApiClient, asset).setResultCallback(new ResultCallback<DataApi.GetFdForAssetResult>() {
-//                @Override
-//                public void onResult(DataApi.GetFdForAssetResult getFdForAssetResult) {
-//                    InputStream assetInputStream = getFdForAssetResult.getInputStream();
-//                    if (assetInputStream == null) {
-//                        Log.w(LOG_TAG, "rkakadia Requested an unknown Asset.");
-//                        weatherId = null;
-//                    }
-//                    // decode the stream into a bitmap
-//                    Bitmap bitmap = BitmapFactory.decodeStream(assetInputStream);
-//                    weatherId = Bitmap.createScaledBitmap(bitmap, 50, 50, false);
-//                }
-//            });
-//            Log.d(LOG_TAG, "rkakadia loadBitmapFromAsset() watchface end");
-//        }
     }
 }
